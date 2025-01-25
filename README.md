@@ -69,6 +69,7 @@ The following contracts have been deployed and verified on Sepolia testnet:
 
 - Create CALL and PUT options for stETH
 - Set custom strike prices and maturities
+
 - Exercise options when profitable
 - Cancel unexercised options
 - Admin controls for protocol fees and limits
