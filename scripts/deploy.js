@@ -1,5 +1,5 @@
 // scripts/deploy.js
-const hre = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
     const [deployer] = await ethers.getSigners();
@@ -35,6 +35,27 @@ async function main() {
     );
     await manager.deployed();
     console.log("OptionsManager deployed to:", manager.address);
+
+    // Deploy MockStETH
+    const MockStETH = await ethers.getContractFactory("MockStETH");
+    const mockStETH = await MockStETH.deploy();
+    await mockStETH.deployed();
+    console.log("MockStETH deployed to:", mockStETH.address);
+
+    // Deploy MockPriceAggregator with initial price of 2000 USD (with 8 decimals)
+    const MockPriceAggregator = await ethers.getContractFactory("MockPriceAggregator");
+    const mockPriceAggregator = await MockPriceAggregator.deploy(200000000000, 8);
+    await mockPriceAggregator.deployed();
+    console.log("MockPriceAggregator deployed to:", mockPriceAggregator.address);
+
+    // Deploy OptionsMarket with mock contracts
+    const OptionsMarket = await ethers.getContractFactory("OptionsMarket");
+    const optionsMarket = await OptionsMarket.deploy(
+        mockStETH.address,
+        mockPriceAggregator.address
+    );
+    await optionsMarket.deployed();
+    console.log("OptionsMarket deployed to:", optionsMarket.address);
 }
 
 main()
