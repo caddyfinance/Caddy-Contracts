@@ -6,51 +6,55 @@ async function main() {
     console.log("Deploying contracts with account:", deployer.address);
 
     // Deploy MockERC20 (stETH)
-    const MockERC20 = await ethers.getContractFactory("MockERC20");
-    const mockStETH = await MockERC20.deploy("Staked ETH", "stETH");
-    await mockStETH.deployed();
-    console.log("MockStETH deployed to:", mockStETH.address);
+    const MockERC20 = await ethers.getContractFactory("MockStETH");
+    const mockStETH = await MockERC20.deploy();
+    await mockStETH.waitForDeployment();
+    console.log("MockStETH deployed to:", mockStETH.target);
 
     // Deploy MockPriceFeed
     const MockPriceFeed = await ethers.getContractFactory("MockPriceFeed");
     const mockPriceFeed = await MockPriceFeed.deploy();
-    await mockPriceFeed.deployed();
-    console.log("MockPriceFeed deployed to:", mockPriceFeed.address);
+    await mockPriceFeed.waitForDeployment();
+    console.log("MockPriceFeed deployed to:", mockPriceFeed.target);
 
     // Deploy OptionsMarket
     const OptionsMarket = await ethers.getContractFactory("OptionsMarket");
     const optionsMarket = await OptionsMarket.deploy(
-        mockStETH.address,
-        mockPriceFeed.address
+        mockStETH.target,
+        mockPriceFeed.target
     );
-    await optionsMarket.deployed();
-    console.log("OptionsMarket deployed to:", optionsMarket.address);
+    await optionsMarket.waitForDeployment();
+    console.log("OptionsMarket deployed to:", optionsMarket.target);
 
     // Deploy OptionsFactory
     const OptionsFactory = await ethers.getContractFactory("OptionsFactory");
     const optionsFactory = await OptionsFactory.deploy();
-    await optionsFactory.deployed();
-    console.log("OptionsFactory deployed to:", optionsFactory.address);
+    await optionsFactory.waitForDeployment();
+    console.log("OptionsFactory deployed to:", optionsFactory.target);
+
+    console.log("Waiting 60 seconds before verification...");
+    await new Promise(resolve => setTimeout(resolve, 60000)); // 60 seconds = 1 minute
+
 
     // Verify contracts on Etherscan
     console.log("Verifying contracts...");
     await hre.run("verify:verify", {
-        address: mockStETH.address,
-        constructorArguments: ["Staked ETH", "stETH"],
-    });
-
-    await hre.run("verify:verify", {
-        address: mockPriceFeed.address,
+        address: mockStETH.target,
         constructorArguments: [],
     });
 
     await hre.run("verify:verify", {
-        address: optionsMarket.address,
-        constructorArguments: [mockStETH.address, mockPriceFeed.address],
+        address: mockPriceFeed.target,
+        constructorArguments: [],
     });
 
     await hre.run("verify:verify", {
-        address: optionsFactory.address,
+        address: optionsMarket.target,
+        constructorArguments: [mockStETH.target, mockPriceFeed.target],
+    });
+
+    await hre.run("verify:verify", {
+        address: optionsFactory.target,
         constructorArguments: [],
     });
 }
