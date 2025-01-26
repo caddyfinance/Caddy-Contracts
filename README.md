@@ -91,3 +91,16 @@ To run the tests:
 npx hardhat test
 ```
 
+
+
+## Deployed Contracts (Sepolia)
+
+Deployment Summary
+=================
+MockERC20: 0xF5D679861ba376466E16Fcf07325BE47A3Da5C6f
+OptionPosition: 0xE38C5e83E0d002623E9d87Ead26222B099f51fAc
+OptionsEngine: 0xD212aebf14C1445803752f9B3aC487B8E1251227
+Deployer: 0x3ae7F2767111D8700F82122A373792B99d605749
+Current Price: 2000n
+Deployer Token Balance: 1000000.0
+
