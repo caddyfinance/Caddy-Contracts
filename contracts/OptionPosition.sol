@@ -10,6 +10,9 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract OptionPosition is ERC721, AccessControl {
     using SafeMath for uint256;
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PRICE_UPDATER_ROLE = keccak256("PRICE_UPDATER_ROLE");
+    
+    uint256 public currentPrice = 2000; // Default price in USD
     
     enum PositionType { LONG_CALL, SHORT_CALL, LONG_PUT, SHORT_PUT }
     
@@ -34,12 +37,30 @@ contract OptionPosition is ERC721, AccessControl {
         uint256 strikePrice
     );
 
+    event PriceUpdated(
+        uint256 oldPrice,
+        uint256 newPrice,
+        address updater
+    );
+
     constructor() ERC721("Options Position", "OPT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(PRICE_UPDATER_ROLE, msg.sender);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
+    }
+
+    function updatePrice(uint256 newPrice) external onlyRole(PRICE_UPDATER_ROLE) {
+        require(newPrice > 0, "Price must be greater than 0");
+        uint256 oldPrice = currentPrice;
+        currentPrice = newPrice;
+        emit PriceUpdated(oldPrice, newPrice, msg.sender);
+    }
+
+    function getCurrentPrice() external view returns (uint256) {
+        return currentPrice;
     }
 
     function mint(
@@ -108,8 +129,8 @@ contract OptionPosition is ERC721, AccessControl {
         bool isCall = positionType == OptionPosition.PositionType.LONG_CALL || 
                      positionType == OptionPosition.PositionType.SHORT_CALL;
                      
-        // Current ETH price in USD (this should ideally come from an oracle)
-        uint256 currentPrice = 2000; // Example: $2000 per ETH
+        // Use the current price from state
+        uint256 currentPriceValue = currentPrice;
         
         // Simplified volatility (30%)
         uint256 volatility = 30;
@@ -119,31 +140,31 @@ contract OptionPosition is ERC721, AccessControl {
         
         uint256 premium;
         if (isCall) {
-            if (currentPrice > strikePrice) {
+            if (currentPriceValue > strikePrice) {
                 // In the money
-                premium = (currentPrice.sub(strikePrice)).mul(80).div(100);
+                premium = (currentPriceValue.sub(strikePrice)).mul(80).div(100);
             } else {
                 // Out of the money
-                premium = (strikePrice.sub(currentPrice)).mul(20).div(100);
+                premium = (strikePrice.sub(currentPriceValue)).mul(20).div(100);
             }
         } else {
-            if (strikePrice > currentPrice) {
+            if (strikePrice > currentPriceValue) {
                 // In the money
-                premium = (strikePrice.sub(currentPrice)).mul(80).div(100);
+                premium = (strikePrice.sub(currentPriceValue)).mul(80).div(100);
             } else {
                 // Out of the money
-                premium = (currentPrice.sub(strikePrice)).mul(20).div(100);
+                premium = (currentPriceValue.sub(strikePrice)).mul(20).div(100);
             }
         }
         
         // Add time value: longer time = higher premium
-        premium = premium.add(timeToExpiry.mul(currentPrice).div(365).mul(volatility).div(100));
+        premium = premium.add(timeToExpiry.mul(currentPriceValue).div(365).mul(volatility).div(100));
         
         // Convert premium to wei first (1 USD = 1e18 wei)
         premium = premium.mul(1e18);
         
         // Now scale by amount (which is in wei)
-        return premium.mul(amount).div(currentPrice.mul(1e18));
+        return premium.mul(amount).div(currentPriceValue.mul(1e18));
     }
 
     function getCurrentTimestamp() external view returns (uint256) {

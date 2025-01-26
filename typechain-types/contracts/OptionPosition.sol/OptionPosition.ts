@@ -28,10 +28,13 @@ export interface OptionPositionInterface extends Interface {
     nameOrSignature:
       | "DEFAULT_ADMIN_ROLE"
       | "MINTER_ROLE"
+      | "PRICE_UPDATER_ROLE"
       | "approve"
       | "balanceOf"
       | "calculatePremium"
+      | "currentPrice"
       | "getApproved"
+      | "getCurrentPrice"
       | "getCurrentTimestamp"
       | "getPosition"
       | "getRoleAdmin"
@@ -52,6 +55,7 @@ export interface OptionPositionInterface extends Interface {
       | "symbol"
       | "tokenURI"
       | "transferFrom"
+      | "updatePrice"
   ): FunctionFragment;
 
   getEvent(
@@ -59,6 +63,7 @@ export interface OptionPositionInterface extends Interface {
       | "Approval"
       | "ApprovalForAll"
       | "PositionOpened"
+      | "PriceUpdated"
       | "RoleAdminChanged"
       | "RoleGranted"
       | "RoleRevoked"
@@ -74,6 +79,10 @@ export interface OptionPositionInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "PRICE_UPDATER_ROLE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "approve",
     values: [AddressLike, BigNumberish]
   ): string;
@@ -86,8 +95,16 @@ export interface OptionPositionInterface extends Interface {
     values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "currentPrice",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getApproved",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getCurrentPrice",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getCurrentTimestamp",
@@ -171,6 +188,10 @@ export interface OptionPositionInterface extends Interface {
     functionFragment: "transferFrom",
     values: [AddressLike, AddressLike, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "updatePrice",
+    values: [BigNumberish]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "DEFAULT_ADMIN_ROLE",
@@ -180,6 +201,10 @@ export interface OptionPositionInterface extends Interface {
     functionFragment: "MINTER_ROLE",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "PRICE_UPDATER_ROLE",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
@@ -187,7 +212,15 @@ export interface OptionPositionInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "currentPrice",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getApproved",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getCurrentPrice",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -238,6 +271,10 @@ export interface OptionPositionInterface extends Interface {
   decodeFunctionResult(functionFragment: "tokenURI", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "transferFrom",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "updatePrice",
     data: BytesLike
   ): Result;
 }
@@ -303,6 +340,28 @@ export namespace PositionOpenedEvent {
     positionType: bigint;
     amount: bigint;
     strikePrice: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace PriceUpdatedEvent {
+  export type InputTuple = [
+    oldPrice: BigNumberish,
+    newPrice: BigNumberish,
+    updater: AddressLike
+  ];
+  export type OutputTuple = [
+    oldPrice: bigint,
+    newPrice: bigint,
+    updater: string
+  ];
+  export interface OutputObject {
+    oldPrice: bigint;
+    newPrice: bigint;
+    updater: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -433,6 +492,8 @@ export interface OptionPosition extends BaseContract {
 
   MINTER_ROLE: TypedContractMethod<[], [string], "view">;
 
+  PRICE_UPDATER_ROLE: TypedContractMethod<[], [string], "view">;
+
   approve: TypedContractMethod<
     [to: AddressLike, tokenId: BigNumberish],
     [void],
@@ -451,7 +512,11 @@ export interface OptionPosition extends BaseContract {
     "view"
   >;
 
+  currentPrice: TypedContractMethod<[], [bigint], "view">;
+
   getApproved: TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
+
+  getCurrentPrice: TypedContractMethod<[], [bigint], "view">;
 
   getCurrentTimestamp: TypedContractMethod<[], [bigint], "view">;
 
@@ -582,6 +647,12 @@ export interface OptionPosition extends BaseContract {
     "nonpayable"
   >;
 
+  updatePrice: TypedContractMethod<
+    [newPrice: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -591,6 +662,9 @@ export interface OptionPosition extends BaseContract {
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "MINTER_ROLE"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "PRICE_UPDATER_ROLE"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "approve"
@@ -614,8 +688,14 @@ export interface OptionPosition extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "currentPrice"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "getApproved"
   ): TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "getCurrentPrice"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "getCurrentTimestamp"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -757,6 +837,9 @@ export interface OptionPosition extends BaseContract {
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "updatePrice"
+  ): TypedContractMethod<[newPrice: BigNumberish], [void], "nonpayable">;
 
   getEvent(
     key: "Approval"
@@ -778,6 +861,13 @@ export interface OptionPosition extends BaseContract {
     PositionOpenedEvent.InputTuple,
     PositionOpenedEvent.OutputTuple,
     PositionOpenedEvent.OutputObject
+  >;
+  getEvent(
+    key: "PriceUpdated"
+  ): TypedContractEvent<
+    PriceUpdatedEvent.InputTuple,
+    PriceUpdatedEvent.OutputTuple,
+    PriceUpdatedEvent.OutputObject
   >;
   getEvent(
     key: "RoleAdminChanged"
@@ -840,6 +930,17 @@ export interface OptionPosition extends BaseContract {
       PositionOpenedEvent.InputTuple,
       PositionOpenedEvent.OutputTuple,
       PositionOpenedEvent.OutputObject
+    >;
+
+    "PriceUpdated(uint256,uint256,address)": TypedContractEvent<
+      PriceUpdatedEvent.InputTuple,
+      PriceUpdatedEvent.OutputTuple,
+      PriceUpdatedEvent.OutputObject
+    >;
+    PriceUpdated: TypedContractEvent<
+      PriceUpdatedEvent.InputTuple,
+      PriceUpdatedEvent.OutputTuple,
+      PriceUpdatedEvent.OutputObject
     >;
 
     "RoleAdminChanged(bytes32,bytes32,bytes32)": TypedContractEvent<

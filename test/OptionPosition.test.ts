@@ -207,4 +207,67 @@ describe("OptionPosition", function () {
       expect(contractTime).to.equal(currentTime);
     });
   });
+
+  describe("Price Management", function () {
+    it("should return the default price", async function () {
+      const price = await optionPosition.getCurrentPrice();
+      expect(price).to.equal(2000n);
+    });
+
+    it("should allow PRICE_UPDATER_ROLE to update price", async function () {
+      const PRICE_UPDATER_ROLE = await optionPosition.PRICE_UPDATER_ROLE();
+      await optionPosition.grantRole(PRICE_UPDATER_ROLE, await minter.getAddress());
+
+      const oldPrice = await optionPosition.getCurrentPrice();
+      const newPrice = 2500n;
+
+      const tx = await optionPosition.connect(minter).updatePrice(newPrice);
+      const receipt = await tx.wait();
+
+      // Check event
+      const event = receipt?.logs[0] as EventLog;
+      expect(event.eventName).to.equal("PriceUpdated");
+      expect(event.args[0]).to.equal(oldPrice); // oldPrice
+      expect(event.args[1]).to.equal(newPrice); // newPrice
+      expect(event.args[2]).to.equal(await minter.getAddress()); // updater
+
+      // Check state
+      expect(await optionPosition.getCurrentPrice()).to.equal(newPrice);
+    });
+
+    it("should not allow non-PRICE_UPDATER_ROLE to update price", async function () {
+      await expect(
+        optionPosition.connect(user).updatePrice(2500n)
+      ).to.be.rejectedWith("AccessControl: account 0x");
+    });
+
+    it("should not allow setting price to zero", async function () {
+      const PRICE_UPDATER_ROLE = await optionPosition.PRICE_UPDATER_ROLE();
+      await optionPosition.grantRole(PRICE_UPDATER_ROLE, await minter.getAddress());
+
+      await expect(
+        optionPosition.connect(minter).updatePrice(0)
+      ).to.be.rejectedWith("Price must be greater than 0");
+    });
+
+    it("should affect premium calculation", async function () {
+      const amount = 100n;
+      const strikePrice = 2000n;
+      const positionType = 0; // LONG_CALL
+
+      // Get premium with default price (2000)
+      const initialPremium = await optionPosition.calculatePremium(amount, strikePrice, positionType);
+
+      // Update price to 2500
+      const PRICE_UPDATER_ROLE = await optionPosition.PRICE_UPDATER_ROLE();
+      await optionPosition.grantRole(PRICE_UPDATER_ROLE, await minter.getAddress());
+      await optionPosition.connect(minter).updatePrice(2500n);
+
+      // Get premium with new price
+      const newPremium = await optionPosition.calculatePremium(amount, strikePrice, positionType);
+
+      // Premium should be different
+      expect(newPremium).to.not.equal(initialPremium);
+    });
+  });
 }); 
