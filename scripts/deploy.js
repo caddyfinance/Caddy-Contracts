@@ -1,68 +1,25 @@
-// scripts/deploy.js
-const { ethers } = require("hardhat");
+import { ethers } from "hardhat";
 
 async function main() {
-    const [deployer] = await ethers.getSigners();
-    console.log("Deploying contracts with account:", deployer.address);
+  // Deploy OptionPosition
+  const OptionPosition = await ethers.getContractFactory("OptionPosition");
+  const optionPosition = await OptionPosition.deploy();
+  await optionPosition.deployed();
+  console.log("OptionPosition deployed to:", optionPosition.address);
 
-    // Deploy MockERC20 (stETH)
-    const MockERC20 = await ethers.getContractFactory("MockStETH");
-    const mockStETH = await MockERC20.deploy();
-    await mockStETH.waitForDeployment();
-    console.log("MockStETH deployed to:", mockStETH.target);
+  // Deploy OptionsEngine
+  const OptionsEngine = await ethers.getContractFactory("OptionsEngine");
+  const optionsEngine = await OptionsEngine.deploy(optionPosition.address);
+  await optionsEngine.deployed();
+  console.log("OptionsEngine deployed to:", optionsEngine.address);
 
-    // Deploy MockPriceFeed
-    const MockPriceFeed = await ethers.getContractFactory("MockPriceFeed");
-    const mockPriceFeed = await MockPriceFeed.deploy();
-    await mockPriceFeed.waitForDeployment();
-    console.log("MockPriceFeed deployed to:", mockPriceFeed.target);
-
-    // Deploy OptionsMarket
-    const OptionsMarket = await ethers.getContractFactory("OptionsMarket");
-    const optionsMarket = await OptionsMarket.deploy(
-        mockStETH.target,
-        mockPriceFeed.target
-    );
-    await optionsMarket.waitForDeployment();
-    console.log("OptionsMarket deployed to:", optionsMarket.target);
-
-    // Deploy OptionsFactory
-    const OptionsFactory = await ethers.getContractFactory("OptionsFactory");
-    const optionsFactory = await OptionsFactory.deploy();
-    await optionsFactory.waitForDeployment();
-    console.log("OptionsFactory deployed to:", optionsFactory.target);
-
-    console.log("Waiting 60 seconds before verification...");
-    await new Promise(resolve => setTimeout(resolve, 60000)); // 60 seconds = 1 minute
-
-
-    // Verify contracts on Etherscan
-    console.log("Verifying contracts...");
-    await hre.run("verify:verify", {
-        address: mockStETH.target,
-        constructorArguments: [],
-    });
-
-    await hre.run("verify:verify", {
-        address: mockPriceFeed.target,
-        constructorArguments: [],
-    });
-
-    await hre.run("verify:verify", {
-        address: optionsMarket.target,
-        constructorArguments: [mockStETH.target, mockPriceFeed.target],
-    });
-
-    await hre.run("verify:verify", {
-        address: optionsFactory.target,
-        constructorArguments: [],
-    });
+  // Grant MINTER_ROLE to OptionsEngine
+  const MINTER_ROLE = await optionPosition.MINTER_ROLE();
+  await optionPosition.grantRole(MINTER_ROLE, optionsEngine.address);
+  console.log("MINTER_ROLE granted to OptionsEngine");
 }
 
-main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error(error);
-        process.exit(1);
-    });
-
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
