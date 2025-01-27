@@ -30,7 +30,7 @@ export type { IERC165 } from "./@openzeppelin/contracts/utils/introspection/IERC
 export { IERC165__factory } from "./factories/@openzeppelin/contracts/utils/introspection/IERC165__factory";
 export type { MockERC20 } from "./contracts/mocks/MockERC20";
 export { MockERC20__factory } from "./factories/contracts/mocks/MockERC20__factory";
-export type { OptionPosition } from "./contracts/OptionPosition.sol/OptionPosition";
-export { OptionPosition__factory } from "./factories/contracts/OptionPosition.sol/OptionPosition__factory";
-export type { OptionsEngine } from "./contracts/OptionPosition.sol/OptionsEngine";
-export { OptionsEngine__factory } from "./factories/contracts/OptionPosition.sol/OptionsEngine__factory";
+export type { OptionsEngine } from "./contracts/OptionEngine.sol/OptionsEngine";
+export { OptionsEngine__factory } from "./factories/contracts/OptionEngine.sol/OptionsEngine__factory";
+export type { OptionPosition } from "./contracts/OptionPosition";
+export { OptionPosition__factory } from "./factories/contracts/OptionPosition__factory";

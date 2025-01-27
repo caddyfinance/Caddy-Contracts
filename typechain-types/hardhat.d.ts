@@ -62,13 +62,13 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MockERC20__factory>;
     getContractFactory(
-      name: "OptionPosition",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.OptionPosition__factory>;
-    getContractFactory(
       name: "OptionsEngine",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OptionsEngine__factory>;
+    getContractFactory(
+      name: "OptionPosition",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.OptionPosition__factory>;
 
     getContractAt(
       name: "AccessControl",
@@ -131,15 +131,15 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.MockERC20>;
     getContractAt(
-      name: "OptionPosition",
+      name: "OptionsEngine",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.OptionPosition>;
+    ): Promise<Contracts.OptionsEngine>;
     getContractAt(
-      name: "OptionsEngine",
+      name: "OptionPosition",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.OptionsEngine>;
+    ): Promise<Contracts.OptionPosition>;
 
     deployContract(
       name: "AccessControl",
@@ -190,13 +190,13 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MockERC20>;
     deployContract(
-      name: "OptionPosition",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.OptionPosition>;
-    deployContract(
       name: "OptionsEngine",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OptionsEngine>;
+    deployContract(
+      name: "OptionPosition",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.OptionPosition>;
 
     deployContract(
       name: "AccessControl",
@@ -259,15 +259,15 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.MockERC20>;
     deployContract(
-      name: "OptionPosition",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.OptionPosition>;
-    deployContract(
       name: "OptionsEngine",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.OptionsEngine>;
+    deployContract(
+      name: "OptionPosition",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.OptionPosition>;
 
     // default types
     getContractFactory(
