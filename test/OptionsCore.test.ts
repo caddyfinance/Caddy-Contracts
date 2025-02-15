@@ -16,6 +16,10 @@ describe("Options Protocol", function () {
 
   beforeEach(async function () {
     [owner, user1, user2] = await ethers.getSigners();
+    
+    // Log initial balances
+    console.log("User1 initial balance:", (await user1.provider.getBalance(await user1.getAddress())).toString());
+    console.log("User2 initial balance:", (await user2.provider.getBalance(await user2.getAddress())).toString());
 
     // Deploy mock ERC20
     const MockERC20Factory = await ethers.getContractFactory("MockERC20");
@@ -36,30 +40,28 @@ describe("Options Protocol", function () {
     const MINTER_ROLE = await optionPosition.MINTER_ROLE();
     await optionPosition.grantRole(MINTER_ROLE, await optionsEngine.getAddress());
 
-    // Mint tokens to users
-    await mockERC20.mint(await user1.getAddress(), parseEther("1000"));
-    await mockERC20.mint(await user2.getAddress(), parseEther("1000"));
+    // Mint tokens to users with smaller amounts
+    await mockERC20.mint(await user1.getAddress(), parseEther("10"));
+    await mockERC20.mint(await user2.getAddress(), parseEther("10"));
   });
 
   describe("Long Call", function () {
     it("should create long call position", async function () {
-      const amount = parseEther("0.0000000001");
-      const strikePrice = parseEther("0.0000000001");
-      const expiry = (await time.latest()) + 86400 * 30; // 30 days
-
-      console.log("amount", amount);
-      console.log("strikePrice", strikePrice);
-      console.log("expiry", expiry);
-      // Calculate premium
+      const amount = parseEther("0.00001"); // Even smaller amount
+      const strikePrice = parseEther("0.00001"); 
+      
+      const currentTime = await time.latest();
+      const expiry = currentTime + 5;
+      
       const premium = await optionPosition.calculatePremium(
         amount,
         strikePrice,
         0 // LONG_CALL
       );
-      console.log("premium", premium);
 
-      // Open position
-      const tx = await optionsEngine.connect(user1).openPosition(
+      console.log("Premium for long call:", premium.toString());
+
+      await optionsEngine.connect(user1).openPosition(
         await mockERC20.getAddress(),
         amount,
         strikePrice,
@@ -67,25 +69,19 @@ describe("Options Protocol", function () {
         0, // LONG_CALL
         { value: premium }
       );
-      await tx.wait();
 
-      console.log("tx", tx);
-      const tokenId = 0;
-      const [, , strikePrice_, , amount_, positionType_] = await optionPosition.getPosition(tokenId);
-      expect(positionType_).to.equal(0); // LONG_CALL
+      const [underlying, , strikePrice_, expiry_, amount_, positionType_] = await optionPosition.getPosition(0);
+      expect(underlying).to.equal(await mockERC20.getAddress());
+      expect(positionType_).to.equal(0);
       expect(amount_).to.equal(amount);
       expect(strikePrice_).to.equal(strikePrice);
     });
 
     it("should exercise long call at expiry", async function () {
-      console.log("user1", await user1.getAddress());
-      // Create position
-      const amount = parseEther("0.0000000001");
-      const strikePrice = parseEther("0.0000000001");
-      const expiry = (await time.latest()) + 86400 * 30;
-      console.log("amount", amount);
-      console.log("strikePrice", strikePrice);
-      console.log("expiry", expiry);
+      const amount = parseEther("0.00001");
+      const strikePrice = parseEther("0.00001");
+      const currentTime = await time.latest();
+      const expiry = currentTime + 5;
 
       // First create a short call position to provide collateral
       await mockERC20.connect(user2).approve(await optionsEngine.getAddress(), amount);
@@ -94,14 +90,11 @@ describe("Options Protocol", function () {
         amount,
         strikePrice,
         expiry,
-        1, // SHORT_CALL
+        1 // SHORT_CALL
       );
 
-      // Now create the long call position
       const premium = await optionPosition.calculatePremium(amount, strikePrice, 0);
-
-      console.log("premium", premium);
-      const tx = await optionsEngine.connect(user1).openPosition(
+      await optionsEngine.connect(user1).openPosition(
         await mockERC20.getAddress(),
         amount,
         strikePrice,
@@ -109,18 +102,15 @@ describe("Options Protocol", function () {
         0, // LONG_CALL
         { value: premium }
       );
-      await tx.wait();
 
-      console.log("tx", tx);
-
-      // Fast forward to expiry
       await time.increaseTo(expiry);
 
-      // Exercise
-      const amountBigInt = BigInt(amount.toString());
-      const strikePriceBigInt = BigInt(strikePrice.toString());
-      await optionsEngine.connect(user1).exercise(1, { // Note: tokenId is 1 for the long call
-        value: amountBigInt * strikePriceBigInt
+      // Fix: Don't scale down the payment amount
+      const paymentAmount = amount * strikePrice;
+      console.log("Exercise payment amount:", paymentAmount.toString());
+      
+      await optionsEngine.connect(user1).exercise(1, {
+        value: paymentAmount
       });
 
       const [, , , , , , isSettled] = await optionPosition.getPosition(1);
@@ -130,13 +120,12 @@ describe("Options Protocol", function () {
 
   describe("Short Call", function () {
     it("should create short call position", async function () {
-      const amount = parseEther("0.001");
-      const strikePrice = parseEther("0.001");
-      const expiry = (await time.latest()) + 86400 * 30;
+      const amount = parseEther("0.00001");  // Match the amount used in other tests
+      const strikePrice = parseEther("0.00001");
+      const currentTime = await time.latest();
+      const expiry = currentTime + 5;
 
-      // Approve tokens
       await mockERC20.connect(user1).approve(await optionsEngine.getAddress(), amount);
-
       await optionsEngine.connect(user1).openPosition(
         await mockERC20.getAddress(),
         amount,
@@ -146,18 +135,18 @@ describe("Options Protocol", function () {
       );
 
       const [, , , , , positionType_] = await optionPosition.getPosition(0);
-      expect(positionType_).to.equal(1); // SHORT_CALL
+      expect(positionType_).to.equal(1);
     });
   });
 
   describe("Long Put", function () {
     it("should create long put position", async function () {
-      const amount = parseEther("0.0000000001");
-      const strikePrice = parseEther("0.0000000001");
-      const expiry = (await time.latest()) + 86400 * 30;
+      const amount = parseEther("0.00001");  // Match the amount used in other tests
+      const strikePrice = parseEther("0.00001");
+      const currentTime = await time.latest();
+      const expiry = currentTime + 5;
 
       const premium = await optionPosition.calculatePremium(amount, strikePrice, 2);
-
       await optionsEngine.connect(user1).openPosition(
         await mockERC20.getAddress(),
         amount,
@@ -168,20 +157,26 @@ describe("Options Protocol", function () {
       );
 
       const [, , , , , positionType_] = await optionPosition.getPosition(0);
-      expect(positionType_).to.equal(2); // LONG_PUT
+      expect(positionType_).to.equal(2);
     });
   });
 
   describe("Short Put", function () {
     it("should create short put position", async function () {
-      const amount = parseEther("0.0000000001");
-      const strikePrice = parseEther("0.0000000001");
-      const expiry = (await time.latest()) + 86400 * 30;
+      const amount = parseEther("0.00001");
+      const strikePrice = parseEther("0.00001");
+      const currentTime = await time.latest();
+      const expiry = currentTime + 5;
 
-      // Convert to BigInt before operations
-      const amountBigInt = BigInt(amount.toString());
-      const strikePriceBigInt = BigInt(strikePrice.toString());
-      const collateral = (amountBigInt * strikePriceBigInt * 12000n) / 10000n;
+      // Calculate collateral exactly as the contract does
+      const collateral = amount * strikePrice;  // First multiply amount and strike price
+      console.log("Base collateral:", collateral.toString());
+      
+      // Then apply the ratio
+      const finalCollateral = (collateral * BigInt(12000)) / BigInt(10000);
+      console.log("Amount:", amount.toString());
+      console.log("Strike Price:", strikePrice.toString());
+      console.log("Final Collateral:", finalCollateral.toString());
 
       await optionsEngine.connect(user1).openPosition(
         await mockERC20.getAddress(),
@@ -189,11 +184,11 @@ describe("Options Protocol", function () {
         strikePrice,
         expiry,
         3, // SHORT_PUT
-        { value: collateral }
+        { value: finalCollateral }
       );
 
       const [, , , , , positionType_] = await optionPosition.getPosition(0);
-      expect(positionType_).to.equal(3); // SHORT_PUT
+      expect(positionType_).to.equal(3);
     });
   });
 });
