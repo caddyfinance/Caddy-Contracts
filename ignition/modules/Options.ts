@@ -14,7 +14,7 @@ export default buildModule("OptionsModule", (m) => {
   // Deploy MockERC20 for testing
   const mockERC20 = m.contract(
     "MockERC20",
-    ["Mock Token", "MTK"]
+    ["Staked Monad", "stMON"]
   );
 
   // Calculate MINTER_ROLE hash directly

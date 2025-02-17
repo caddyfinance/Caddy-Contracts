@@ -5,7 +5,7 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
-    "deploy:monad": "npx hardhat ignition deploy ./ignition/modules/Options.ts --network monad --verify",
+    "deploy:monad": "npx hardhat ignition deploy ./ignition/modules/Options.ts --network monad ",
     "verify:monad": "npx hardhat ignition verify ./ignition/modules/Options.ts --network monad --verify",
     "deploy:sepolia": "npx hardhat ignition deploy ./ignition/modules/Options.ts --network sepolia",
     "verify:sepolia": "npx hardhat ignition verify ./ignition/modules/Options.ts --network sepolia",

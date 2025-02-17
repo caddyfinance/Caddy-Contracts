@@ -95,7 +95,7 @@ contract OptionsEngine is ReentrancyGuard, AccessControl {
             bool isSettled
         ) = optionPosition.getPosition(tokenId);
         
-        require(!isSettled, "Position already settled");
+        require(!isSettled, "Position Already Settled");
         require(block.timestamp >= expiry, "Not yet expired");
         require(optionPosition.ownerOf(tokenId) == msg.sender, "Not position owner");
 

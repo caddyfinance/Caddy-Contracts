@@ -28,7 +28,7 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY || "",
-      monad: process.env.ETHERSCAN_API_KEY || "",
+      monad: process.env.MONAD_API_KEY || "",
     },
     customChains: [
       {
@@ -43,14 +43,14 @@ const config: HardhatUserConfig = {
         network: "monad",
         chainId: 10143,
         urls: {
-          apiURL: "https://api-monad.etherscan.io/api",
-          browserURL: "https://testnet.monadexplorer.com/"
+          apiURL: "https://testnet.monadexplorer.com/api",
+          browserURL: "https://testnet.monadexplorer.com"
         }
       }
     ]
   },
   ignition: {
-    modules: ['./ignition/modules'],
+    deploymentDir: './ignition/deployments'
   }
 };
 
