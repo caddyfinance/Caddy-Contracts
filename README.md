@@ -6,11 +6,10 @@ Try running some of the following tasks:
 
 ```shell
 npm i 
-npx hardhat compile
-npx hardhat test
-REPORT_GAS=true npx hardhat test
+npm run compile
+npm run test
 # npx hardhat node
-
-npx hardhat ignition deploy ./ignition/modules/Options.ts --network sepolia
-
+npm run deploy:monad
+npm run verify:monad
+npm run clean
 ```

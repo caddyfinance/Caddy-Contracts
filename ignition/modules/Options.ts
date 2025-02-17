@@ -8,7 +8,7 @@ export default buildModule("OptionsModule", (m) => {
   // Deploy OptionsEngine with OptionPosition address
   const optionsEngine = m.contract(
     "OptionsEngine",
-    [optionPosition]
+    [optionPosition],
   );
 
   // Deploy MockERC20 for testing

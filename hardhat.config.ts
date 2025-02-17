@@ -5,6 +5,8 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
+const MONAD_URL = process.env.MONAD_URL || "https://testnet-rpc2.monad.xyz/52227f026fa8fac9e2014c58fbf5643369b3bfc6";
+
 // Ensure environment variables are properly typed
 const config: HardhatUserConfig = {
   solidity: "0.8.28",
@@ -19,12 +21,33 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
     monad: {
-      url: process.env.MONAD_URL || "",
+      url: MONAD_URL,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     }
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
+    apiKey: {
+      sepolia: process.env.ETHERSCAN_API_KEY || "",
+      monad: process.env.ETHERSCAN_API_KEY || "",
+    },
+    customChains: [
+      {
+        network: "sepolia",
+        chainId: 11155111,
+        urls: {
+          apiURL: "https://api-sepolia.etherscan.io/api",
+          browserURL: "https://sepolia.etherscan.io"
+        }
+      },
+      {
+        network: "monad",
+        chainId: 10143,
+        urls: {
+          apiURL: "https://api-monad.etherscan.io/api",
+          browserURL: "https://testnet.monadexplorer.com/"
+        }
+      }
+    ]
   },
   ignition: {
     modules: ['./ignition/modules'],
