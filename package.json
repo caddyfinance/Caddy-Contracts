@@ -1,5 +1,16 @@
 {
   "name": "hardhat-project",
+  "version": "1.0.0",
+  "description": "A Hardhat project for the Options Protocol",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:monad": "npx hardhat ignition deploy ./ignition/modules/Options.ts --network monad",
+    "deploy:status": "npx hardhat ignition status",
+    "deploy:verify": "npx hardhat ignition verify",
+    "verify:monad": "npx hardhat verify --network monad",
+    "clean": "npx hardhat clean"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/node": "^22.13.4",
