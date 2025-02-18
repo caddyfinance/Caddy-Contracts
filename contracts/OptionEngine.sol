@@ -13,7 +13,7 @@ contract OptionsEngine is ReentrancyGuard, AccessControl {
     
     uint256 public constant COLLATERAL_RATIO = 12000; // 120%
     uint256 public constant MIN_DURATION = 1 ;
-    uint256 public constant MAX_DURATION = 10 ;
+    uint256 public constant MAX_DURATION = 1000 ;
 
     mapping(uint256 => uint256) public lockedCollateral;
     mapping(address => uint256) public userCollateral;
@@ -95,7 +95,7 @@ contract OptionsEngine is ReentrancyGuard, AccessControl {
             bool isSettled
         ) = optionPosition.getPosition(tokenId);
         
-        require(!isSettled, "Position Already Settled");
+        require(!isSettled, "Position already settled");
         require(block.timestamp >= expiry, "Not yet expired");
         require(optionPosition.ownerOf(tokenId) == msg.sender, "Not position owner");
 
@@ -116,6 +116,10 @@ contract OptionsEngine is ReentrancyGuard, AccessControl {
 
         optionPosition.setSettled(tokenId);
         emit PositionExercised(tokenId, msg.sender, amount, settlementAmount);
+    }
+
+    function getCurrentTimestamp() public view returns (uint256) {
+        return block.timestamp;
     }
 
     receive() external payable {}
