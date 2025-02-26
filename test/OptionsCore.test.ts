@@ -191,4 +191,61 @@ describe("Options Protocol", function () {
       expect(positionType_).to.equal(3);
     });
   });
+
+  describe("Withdrawals", function () {
+    it("should allow owner to withdraw tokens", async function () {
+      // First send some tokens to the contract
+      const amount = parseEther("1");
+      await mockERC20.mint(await optionsEngine.getAddress(), amount);
+
+      // Check initial balances
+      const initialContractBalance = await mockERC20.balanceOf(await optionsEngine.getAddress());
+      const initialOwnerBalance = await mockERC20.balanceOf(await owner.getAddress());
+
+      // Withdraw tokens
+      await optionsEngine.connect(owner).withdrawToken(await mockERC20.getAddress(), amount);
+
+      // Check final balances
+      const finalContractBalance = await mockERC20.balanceOf(await optionsEngine.getAddress());
+      const finalOwnerBalance = await mockERC20.balanceOf(await owner.getAddress());
+
+      expect(finalContractBalance).to.equal(initialContractBalance - amount);
+      expect(finalOwnerBalance).to.equal(initialOwnerBalance + amount);
+    });
+
+    it("should allow owner to withdraw ETH", async function () {
+      // First send some ETH to the contract
+      const amount = parseEther("1");
+      await owner.sendTransaction({
+        to: await optionsEngine.getAddress(),
+        value: amount
+      });
+
+      // Check initial balances
+      const initialContractBalance = await ethers.provider.getBalance(await optionsEngine.getAddress());
+      const initialOwnerBalance = await ethers.provider.getBalance(await owner.getAddress());
+
+      // Withdraw ETH
+      const tx = await optionsEngine.connect(owner).withdrawETH(amount);
+      const receipt = await tx.wait();
+      const gasCost = receipt!.gasUsed * receipt!.gasPrice;
+
+      // Check final balances
+      const finalContractBalance = await ethers.provider.getBalance(await optionsEngine.getAddress());
+      const finalOwnerBalance = await ethers.provider.getBalance(await owner.getAddress());
+
+      expect(finalContractBalance).to.equal(initialContractBalance - amount);
+      expect(finalOwnerBalance).to.equal(initialOwnerBalance + amount - gasCost);
+    });
+
+    it("should not allow non-owner to withdraw", async function () {
+      await expect(
+        optionsEngine.connect(user1).withdrawToken(await mockERC20.getAddress(), parseEther("1"))
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+
+      await expect(
+        optionsEngine.connect(user1).withdrawETH(parseEther("1"))
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+  });
 });

@@ -5,8 +5,9 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./OptionPosition.sol";
-contract OptionsEngine is ReentrancyGuard, AccessControl {
+contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
     using SafeMath for uint256;
 
     OptionPosition public immutable optionPosition;
@@ -36,6 +37,9 @@ contract OptionsEngine is ReentrancyGuard, AccessControl {
         uint256 amount,
         uint256 settlementAmount
     );
+
+        event TokenWithdrawn(address indexed token,  address indexed to);
+    event ETHWithdrawn(uint256 amount, address indexed to);
 
     constructor(address _optionPosition) {
         optionPosition = OptionPosition(_optionPosition);
@@ -119,6 +123,45 @@ contract OptionsEngine is ReentrancyGuard, AccessControl {
         optionPosition.setSettled(tokenId);
         emit PositionExercised(tokenId, msg.sender, amount, settlementAmount);
     }
+
+    /**
+     * @notice Allows owner to withdraw ERC20 tokens that are stuck in the contract
+     * @param token The ERC20 token to withdraw
+     */
+    function withdrawToken(address token) external onlyOwner {
+        require(token != address(0), "Invalid token address");
+
+        // Ensure we're not withdrawing tokens that are being used as collateral
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(balance > 0, "Insufficient balance");
+
+        // Transfer the tokens to the owner
+        bool success = IERC20(token).transfer(owner(), balance);
+        require(success, "Transfer failed");
+
+        emit TokenWithdrawn(token, owner());
+    }
+
+
+  /**
+     * @notice Allows owner to withdraw ETH that is stuck in the contract
+     * @param amount The amount of ETH to withdraw
+     */
+    function withdrawETH(uint256 amount) external onlyOwner {
+        require(amount > 0, "Amount must be greater than 0");
+        
+        // Ensure we're not withdrawing ETH that is being used as collateral
+        uint256 balance = address(this).balance;
+        require(balance >= amount, "Insufficient balance");
+
+        // Transfer ETH to the owner
+        (bool success, ) = owner().call{value: amount}("");
+        require(success, "ETH transfer failed");
+
+        emit ETHWithdrawn(amount, owner());
+    }
+
+
 
     function getCurrentTimestamp() public view returns (uint256) {
         return block.timestamp;
