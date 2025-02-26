@@ -21,9 +21,13 @@ contract OptionsEngine is ReentrancyGuard, AccessControl {
     event PositionOpened(
         uint256 indexed tokenId,
         address indexed trader,
+
         uint256 premium,
-        bool isLong,
-        bool isCall
+        uint256 collateral,
+        uint256 strikePrice,
+        uint256 expiry,
+        OptionPosition.PositionType positionType,
+        address underlying
     );
 
     event PositionExercised(
@@ -74,12 +78,10 @@ contract OptionsEngine is ReentrancyGuard, AccessControl {
             positionType
         );
 
-        bool isLong = positionType == OptionPosition.PositionType.LONG_CALL || 
-                     positionType == OptionPosition.PositionType.LONG_PUT;
-        bool isCall = positionType == OptionPosition.PositionType.LONG_CALL || 
-                     positionType == OptionPosition.PositionType.SHORT_CALL;
+        address collateralAsset = underlying;
 
-        emit PositionOpened(tokenId, msg.sender, premium, isLong, isCall);
+
+        emit PositionOpened(tokenId, msg.sender, premium, amount, strikePrice, expiry, positionType, collateralAsset);
 
         return tokenId;
     }
