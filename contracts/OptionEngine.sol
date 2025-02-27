@@ -52,7 +52,7 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
         uint256 strikePrice,
         uint256 expiry,
         OptionPosition.PositionType positionType
-    ) external payable nonReentrant returns (uint256) {
+    ) external nonReentrant returns (uint256) {
         require(expiry > block.timestamp + MIN_DURATION, "Expiry too soon");
         require(expiry <= block.timestamp + MAX_DURATION, "Expiry too far");
         require(amount > 0, "Invalid amount");
@@ -61,7 +61,10 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
 
         if (positionType == OptionPosition.PositionType.LONG_CALL || 
             positionType == OptionPosition.PositionType.LONG_PUT) {
-            require(msg.value >= premium, "Insufficient premium");
+            require(
+                IERC20(underlying).transferFrom(msg.sender, address(this), premium),
+                "Premium transfer failed"
+            );
         } else if (positionType == OptionPosition.PositionType.SHORT_CALL) {
             require(
                 IERC20(underlying).transferFrom(msg.sender, address(this), amount),
@@ -69,7 +72,10 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
             );
         } else { // SHORT_PUT
             uint256 collateral = amount.mul(strikePrice).mul(COLLATERAL_RATIO).div(10000);
-            require(msg.value >= collateral, "Insufficient collateral");
+            require(
+                IERC20(underlying).transferFrom(msg.sender, address(this), collateral),
+                "Collateral transfer failed"
+            );
         }
 
         uint256 tokenId = optionPosition.mint(
@@ -83,7 +89,6 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
         );
 
         address collateralAsset = underlying;
-
 
         emit PositionOpened(tokenId, msg.sender, premium, amount, strikePrice, expiry, positionType, collateralAsset);
 
