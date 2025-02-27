@@ -1,5 +1,5 @@
 {
-  "OptionsModule#MockERC20": "0xD9f0021F9423C81123fe53d02aCB16dC9e1302dA",
-  "OptionsModule#OptionPosition": "0x9Cab23EB3697294eA52B88D88648FfD487530d6e",
-  "OptionsModule#OptionsEngine": "0x2e42d3B666bB53035A7A5A89FFC89ac6B09a3688"
+  "OptionsModule#OptionPosition": "0x1b7278300E4328a126af6D217930419a443bEd7d",
+  "OptionsModule#MockERC20": "0xe04c88192d8a10629723C320624e7925d4FB21b2",
+  "OptionsModule#OptionsEngine": "0xE28A1FFFC4F2E2F3b1C8994A4EcF6A6a6C66389E"
 }

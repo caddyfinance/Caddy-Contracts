@@ -20,8 +20,8 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
     mapping(address => uint256) public userCollateral;
 
     event PositionOpened(
-        uint256 indexed tokenId,
-        address indexed trader,
+        uint256  tokenId,
+        address  trader,
 
         uint256 premium,
         uint256 collateral,
