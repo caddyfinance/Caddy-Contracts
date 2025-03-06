@@ -5,7 +5,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const MONAD_URL = process.env.MONAD_URL || "https://testnet-rpc2.monad.xyz/52227f026fa8fac9e2014c58fbf5643369b3bfc6";
+const MONAD_URL = process.env.MONAD_URL || "https://testnet-rpc.monad.xyz";
 
 // Ensure environment variables are properly typed
 const config: HardhatUserConfig = {

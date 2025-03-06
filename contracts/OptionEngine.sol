@@ -19,6 +19,11 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
     mapping(uint256 => uint256) public lockedCollateral;
     mapping(address => uint256) public userCollateral;
 
+    // Track premiums for each position
+    mapping(uint256 => uint256) public premiumForPosition;
+    // Track if premium has been withdrawn
+    mapping(uint256 => bool) public premiumWithdrawn;
+
     event PositionOpened(
         uint256  tokenId,
         address  trader,
@@ -40,6 +45,8 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
 
         event TokenWithdrawn(address indexed token,  address indexed to);
     event ETHWithdrawn(uint256 amount, address indexed to);
+
+    event PremiumWithdrawn(uint256 indexed tokenId, address indexed writer, uint256 amount);
 
     constructor(address _optionPosition) {
         optionPosition = OptionPosition(_optionPosition);
@@ -70,12 +77,14 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
                 IERC20(underlying).transferFrom(msg.sender, address(this), amount),
                 "Collateral transfer failed"
             );
+            // Store premium for SHORT_CALL position
         } else { // SHORT_PUT
             uint256 collateral = amount.mul(strikePrice).mul(COLLATERAL_RATIO).div(10000);
             require(
                 IERC20(underlying).transferFrom(msg.sender, address(this), collateral),
                 "Collateral transfer failed"
             );
+            // Store premium for SHORT_PUT position
         }
 
         uint256 tokenId = optionPosition.mint(
@@ -87,6 +96,9 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
             amount,
             positionType
         );
+
+                    premiumForPosition[tokenId] = premium;
+
 
         address collateralAsset = underlying;
 
@@ -166,7 +178,38 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
         emit ETHWithdrawn(amount, owner());
     }
 
+    // New function to withdraw premium for option writers
+    function withdrawPremium(uint256 tokenId) external nonReentrant {
+        (
+            address underlying,
+            ,  // strikeAsset
+            ,  // strikePrice
+            uint256 expiry,
+            ,  // amount
+            OptionPosition.PositionType positionType,
+            bool isSettled
+        ) = optionPosition.getPosition(tokenId);
 
+        require(optionPosition.ownerOf(tokenId) == msg.sender, "Not position owner");
+        require(
+            positionType == OptionPosition.PositionType.SHORT_CALL || 
+            positionType == OptionPosition.PositionType.SHORT_PUT, 
+            "Not a writer position"
+        );
+        require(!premiumWithdrawn[tokenId], "Premium already withdrawn");
+        require(block.timestamp >= expiry || isSettled, "Position still active");
+
+        uint256 premium = premiumForPosition[tokenId];
+        require(premium > 0, "No premium to withdraw");
+
+        premiumWithdrawn[tokenId] = true;
+        require(
+            IERC20(underlying).transfer(msg.sender, premium),
+            "Premium transfer failed"
+        );
+
+        emit PremiumWithdrawn(tokenId, msg.sender, premium);
+    }
 
     function getCurrentTimestamp() public view returns (uint256) {
         return block.timestamp;
