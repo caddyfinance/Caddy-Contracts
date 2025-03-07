@@ -186,16 +186,16 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
             ,  // strikePrice
             uint256 expiry,
             ,  // amount
-            OptionPosition.PositionType positionType,
+            ,
             bool isSettled
         ) = optionPosition.getPosition(tokenId);
 
         require(optionPosition.ownerOf(tokenId) == msg.sender, "Not position owner");
-        require(
-            positionType == OptionPosition.PositionType.SHORT_CALL || 
-            positionType == OptionPosition.PositionType.SHORT_PUT, 
-            "Not a writer position"
-        );
+        // require(
+        //     positionType == OptionPosition.PositionType.SHORT_CALL || 
+        //     positionType == OptionPosition.PositionType.SHORT_PUT, 
+        //     "Not a writer position"
+        // );
         require(!premiumWithdrawn[tokenId], "Premium already withdrawn");
         require(block.timestamp >= expiry || isSettled, "Position still active");
 
