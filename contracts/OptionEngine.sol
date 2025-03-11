@@ -33,7 +33,9 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
         uint256 strikePrice,
         uint256 expiry,
         OptionPosition.PositionType positionType,
-        address underlying
+        address underlying,
+        bool isSettled,
+        uint256 walletType
     );
 
     event PositionExercised(
@@ -58,13 +60,15 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
         uint256 amount,
         uint256 strikePrice,
         uint256 expiry,
-        OptionPosition.PositionType positionType
+        OptionPosition.PositionType positionType,
+        uint256 premium,
+        uint256 walletType
     ) external nonReentrant returns (uint256) {
         require(expiry > block.timestamp + MIN_DURATION, "Expiry too soon");
         require(expiry <= block.timestamp + MAX_DURATION, "Expiry too far");
         require(amount > 0, "Invalid amount");
         
-        uint256 premium = optionPosition.calculatePremium(amount, strikePrice, positionType);
+        // uint256 premium = optionPosition.calculatePremium(amount, strikePrice, positionType);
 
         if (positionType == OptionPosition.PositionType.LONG_CALL || 
             positionType == OptionPosition.PositionType.LONG_PUT) {
@@ -102,7 +106,7 @@ contract OptionsEngine is ReentrancyGuard, AccessControl, Ownable {
 
         address collateralAsset = underlying;
 
-        emit PositionOpened(tokenId, msg.sender, premium, amount, strikePrice, expiry, positionType, collateralAsset);
+        emit PositionOpened(tokenId, msg.sender, premium, amount, strikePrice, expiry, positionType, collateralAsset,false,walletType);
 
         return tokenId;
     }

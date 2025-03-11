@@ -13,7 +13,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       accounts: {
-        accountsBalance: "10000000000000000000000000000" // 10 billion ETH
+        accountsBalance: "10000000000000000000000000000000" // 10 billion ETH
       }
     },
     sepolia: {
