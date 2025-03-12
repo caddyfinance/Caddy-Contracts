@@ -205,10 +205,10 @@ npm run test
 ## Deployment
 
 Deploy using Hardhat Ignition:
-
-```
 bash
-npm run deploy:monad // For Monad testnet
+```
+
+npm run deploy:monad 
 ```
 
 
