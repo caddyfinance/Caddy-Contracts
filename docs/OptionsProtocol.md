@@ -194,9 +194,9 @@ The protocol includes comprehensive tests covering:
 
 Run tests using:
 
-
-```
 bash
+```
+
 npm run test
 ```
 
