@@ -180,6 +180,7 @@ await optionsEngine.exercise(tokenId, {
 value: paymentAmount // For call options
 });
 
+```
 
 
 ## Testing
