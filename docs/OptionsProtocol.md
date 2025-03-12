@@ -194,9 +194,8 @@ The protocol includes comprehensive tests covering:
 
 Run tests using:
 
-bash
-```
 
+```
 npm run test
 ```
 
@@ -205,9 +204,9 @@ npm run test
 ## Deployment
 
 Deploy using Hardhat Ignition:
-bash
-```
 
+
+```
 npm run deploy:monad 
 ```
 
